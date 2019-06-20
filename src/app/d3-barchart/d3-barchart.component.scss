@@ -1,0 +1,59 @@
+hr {
+    margin: 20px 0;
+    height: 1px;
+    border: 0;
+    background-color: steelblue;
+}
+.chart {
+    div {
+        font: 10px sans-serif;
+        background-color: steelblue;
+        text-align: right;
+        padding: 3px;
+        margin: 1px;
+        color: white;
+    }
+
+    rect {
+        fill: steelblue;
+    }
+      
+    text {
+        // fill: white;
+        font: 10px sans-serif;
+        text-anchor: end;
+    }    
+}
+
+.bar {
+    fill: steelblue;
+}
+
+.axis {
+    text {
+        font: 10px sans-serif;
+    }
+
+    path,
+    line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+    }
+}    
+
+.x.axis path {
+    display: none;
+}
+
+#chart_real_time {
+    .line {
+        fill: none;
+        stroke: steelblue;
+        stroke-width: 1.5px;
+    }    
+}
+.legenditem {
+    display: inline;
+    padding-right: 10px;
+}

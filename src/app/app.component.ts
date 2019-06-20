@@ -1,61 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { Observable } from 'rxjs';
-import { webSocket } from 'rxjs/webSocket';
+import { Subscription } from 'rxjs';
 import { retryWhen, tap, delay } from 'rxjs/operators';
-import * as socketio from 'socket.io-client';
-
-const createWebSocket = uri => {
-  return new Observable(observer => {
-    try {
-      const subject = webSocket(uri);
-
-      const socket = socketio(uri);
-
-      socket.on('connect', () => {
-        console.log('WS: Connected', socket.id);
-      });
-
-      socket.on('connect_error', (error) => {
-        console.log('WS: Connect error');
-        // observer.error(error);
-      });
-
-      socket.on('message', (marketStatus) => {
-        observer.next(marketStatus);
-      });
-
-      socket.on('disconnect', () => {
-        console.log('WS: Disconnected!');
-        // observer.complete();
-      });
-
-      socket.on('error', (error) => {
-        console.log('WS: Error!');
-        observer.error(error);
-      });
-
-      // const handler = setInterval(() => {
-      //   subject.next('WS: ');
-      // }, 1000);
-
-      // const subscription = subject.asObservable()
-      //   .subscribe(data => {
-      //     observer.next(data);
-      //   },
-      //     error => observer.error(error),
-      //     () => observer.complete());
-
-      return () => {
-        // clearInterval(handler);
-        // if (!subscription.closed) {
-        //   subscription.unsubscribe();
-        // }
-      };
-    } catch (error) {
-      observer.error(error);
-    }
-  });
-};
+import { MinersService } from './miners.service';
 
 @Component({
   selector: 'app-root',
@@ -64,23 +10,41 @@ const createWebSocket = uri => {
 })
 export class AppComponent implements OnInit {
   title = 'rxjs-websockets-d3';
-  marketStatusToPlot: any[] = [];
+  serverData;
+  conectionStatus = false;
+  private socketSubscription: Subscription;
+
+  constructor(private minersService: MinersService) { }
 
   ngOnInit(): void {
-    createWebSocket('http://localhost:3000')
+    this.init();
+  }
+
+  init() {
+    const delayTime = 6000;
+    this.socketSubscription = this.minersService.getMiners$('http://localhost:3000')
       .pipe(
         retryWhen(errors =>
           errors.pipe(
             tap(err => {
               console.error('Got error', err);
             }),
-            delay(1000)
+            delay(delayTime),
           )
         )
       )
-      .subscribe(latestStatus => {
-        console.log(latestStatus);
-        this.marketStatusToPlot = [latestStatus].concat(this.marketStatusToPlot); // 3
-      }, err => console.error(err));
+      .subscribe((latestStatus: any) => {
+        this.serverData = latestStatus;
+      }, err => {
+        console.log('No more data');
+        console.error(err);
+      });
+  }
+
+  toggle() {
+    if (this.socketSubscription && !this.socketSubscription.closed) {
+      return this.socketSubscription.unsubscribe();
+    }
+    this.init();
   }
 }

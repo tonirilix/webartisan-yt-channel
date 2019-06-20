@@ -2,7 +2,7 @@ const app = require('express')();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 
-const market = require('./market');
+const miners = require('./miners');
 
 const port = 3000;
 
@@ -12,24 +12,23 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get('/api/market', (req, res) => {
-  res.send(market.marketPositions);
+app.get('/api/miners', (req, res) => {
+  res.send(miners.getMiners());
 });
 
 http.listen(port, () => {
   console.log(`Listening on *:${port}`);
 });
 
-
-
-
-
 setInterval(function () {
-  console.log('Emmit', market.marketPositions[0]);
-  market.updateMarket();
-  io.sockets.emit('message', market.marketPositions[0]);
-}, 1000);
+  miners.updateValues()
+  const data = miners.getLatest();
+  io.sockets.emit('message', data);
+  // if(miners.validateMinerOneLength()) {
+  //   throw new Error('Forced Error');
+  // }
+}, 500);
 
 io.on('connection', function (socket) {
-  console.log('a user connected');
+  console.log(`A user connected: ${socket.id}`);
 });
